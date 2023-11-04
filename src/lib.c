@@ -35,7 +35,7 @@ int * init_grid(Method method)
                         int index = (y + k) * GRID_SIZE + (x + j);
 
                         if (grid[index] != LANDMINE)
-                            grid[index] = (5-abs(j)) * (5-abs(k)) * 10; //plus surface cost
+                            grid[index] += ((5-abs(j)) * (5-abs(k)) * 10);
                     }
                 }
             }
