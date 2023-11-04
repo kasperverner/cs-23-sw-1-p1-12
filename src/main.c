@@ -1,5 +1,6 @@
 #include "lib.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
   The variables f, g, and h here are used as part of the A* search algorithm.
@@ -23,19 +24,20 @@
     - Implement node blocking (land mines, should block and not just be expensive)
     - Implement pathfinding visualization with colored grid
     - Make tests
+    - Fix issue with pathfinding if SAFEST is chosen
 */
 
 int main(void) {
-    int grid[GRID_SIZE][GRID_SIZE];
-
-    populate_grid(grid);
+    int * grid = init_grid(SHORTEST);
     print_grid(grid);
 
-    Node * start = create_node((Coordinates) {0, 0}, NULL, 0, INFINITY);
-    Node * end = create_node((Coordinates) {9, 8}, NULL, 0, 0);
+    Node * start = create_node((Coordinates) {0, 0}, NULL, 0, INF);
+    Node * end = create_node((Coordinates) {41, 51}, NULL, 0, 0);
 
     Node * path = find_path(start, end, grid);
     print_path(path);
 
-    print_colored();
+    // print_colored();
+
+    free(grid);
 }
