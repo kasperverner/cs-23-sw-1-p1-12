@@ -1,5 +1,5 @@
 #define INF 999999
-#define GRID_SIZE 100
+#define GRID_SIZE 20
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
