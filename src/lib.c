@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+
+// Fill the grid with dummy data
 void populate_grid(int grid [GRID_SIZE][GRID_SIZE])
 {
     time_t t;
@@ -16,18 +18,23 @@ void populate_grid(int grid [GRID_SIZE][GRID_SIZE])
     }
 }
 
+
 void print_grid(int grid [GRID_SIZE][GRID_SIZE])
 {
     printf("COSTS ->\n   ");
+    // Print X coordinates
     for (int i = 0; i < GRID_SIZE; i++) {
         printf("%.2d ", i);
     }
 
     printf("\n");
 
+    // For each row print line
     for (int i = 0; i < GRID_SIZE; i++) {
+        // For each column in row print row Y coordinate
         printf("%.2d ", i);
 
+        // For each column in row print node cost
         for(int j = 0; j < GRID_SIZE; j++) {
             printf("%.2d ", grid[i][j]);
         }
@@ -42,6 +49,7 @@ Node * find_path(Node * start, Node * end, int costs [GRID_SIZE][GRID_SIZE])
 {
     Node * open_nodes[GRID_SIZE * GRID_SIZE] = {start};
     Node * closed_nodes[GRID_SIZE * GRID_SIZE] = {NULL};
+    
     int open_nodes_length = 1;
     int closed_nodes_length = 0;
 
@@ -77,6 +85,7 @@ Node * find_path(Node * start, Node * end, int costs [GRID_SIZE][GRID_SIZE])
                 if (i == 0 && j == 0)
                     continue;
 
+                // Assign neighbour coordinates
                 Coordinates coordinates = (Coordinates) {current_node->coordinates.x + i, current_node->coordinates.y + j};
 
                 // If the neighbour is outside the grid, skip it
@@ -87,6 +96,7 @@ Node * find_path(Node * start, Node * end, int costs [GRID_SIZE][GRID_SIZE])
                 double g = current_node->g + costs[coordinates.y][coordinates.x];
                 double h = calculate_heuristic_cost(coordinates, end->coordinates);
 
+                // Assign neighbour node
                 Node * neighbour = create_node(coordinates, current_node, g, h);
 
                 // If the coordinate has been closed, skip it
@@ -130,14 +140,17 @@ Node * create_node(Coordinates coordinates, Node* parent, double g, double h)
     return node;
 }
 
+
+// The heuristic cost for a node is the distance from the current node to the end node
+// We use the pythagorean theorem to find the direct distance from current to end
 double calculate_heuristic_cost(Coordinates current, Coordinates end)
 {
     return sqrt(pow(current.x - end.x, 2) + pow(current.y - end.y, 2));
 }
 
+// Remove node from array by shifting all nodes after the index one to the left and lowering length by 1
 void delete_node(Node * nodes[], int * length, int index)
 {
-    // Shift all nodes after the index one to the left
     for (int i = index; i < *length - 1; i++) {
         nodes[i] = nodes[i + 1];
     }
