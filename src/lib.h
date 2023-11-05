@@ -23,7 +23,9 @@ typedef enum Surface
     CITY = 10,
     FORREST = 20,
     WATER = 100,
-    LANDMINE = INF
+    LANDMINE = INF,
+    START = 101,
+    END = 102
 } Surface;
 
 typedef struct Coordinates
@@ -41,9 +43,13 @@ typedef struct Node
     struct Node * parent;
 } Node;
 
-int * init_grid(Method method);
+Surface random_surface();
 
-Node * find_path(Node * start, Node * end, const int * grid);
+Surface * generate_surface_map();
+
+int * generate_costs_map(const Surface * surface_map, Method method);
+
+Node * find_path(Node * start, Node * end, const int * costs_map);
 
 Node * create_node(Coordinates coordinates, Node* parent, long double g, long double h);
 
@@ -51,8 +57,10 @@ double calculate_heuristic_cost(Coordinates current, Coordinates end);
 
 void delete_node(Node * nodes[], int * length, int index);
 
-void print_grid(const int * grid);
+void add_path_to_surface_map(Node * start, Node * end, Node * path, Surface * surface_map);
 
-void print_path(Node * path);
+void print_surface_map(const Surface * surface_map);
 
-void print_colored();
+void print_surface_node(Surface surface);
+
+void print_costs_map(const int * costs_map);

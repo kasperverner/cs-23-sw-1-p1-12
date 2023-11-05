@@ -4,78 +4,88 @@
 #include <math.h>
 #include <time.h>
 
-int * init_grid(Method method)
+#define P_GRASS 0.4
+#define P_CITY 0.1
+#define P_FORREST 0.3
+
+
+// Temporary random surface generator
+enum Surface random_surface()
 {
-    // TODO: Read from a file later
+    // Generate a random number between 0 and 1
+    double r = (double)rand() / RAND_MAX;
 
-    int * grid = (int *) malloc(sizeof(int) * GRID_SIZE * GRID_SIZE);
+    // Return a surface type based on the probability
+    if (r < P_GRASS)
+    {
+        return GRASS;
+    }
+    else if (r < P_GRASS + P_CITY)
+    {
+        return CITY;
+    }
+    else if (r < P_GRASS + P_CITY + P_FORREST)
+    {
+        return FORREST;
+    }
+    else
+    {
+        return WATER;
+    }
+}
 
+Surface * generate_surface_map()
+{
+    Surface * surface_map = (Surface *) malloc(sizeof(Surface) * GRID_SIZE * GRID_SIZE);
+
+    // Initialize the random seed
     srand(time(NULL));
+
+    for (int i = 0; i < GRID_SIZE; i++)
+        for (int j = 0; j < GRID_SIZE; j++)
+            surface_map[i * GRID_SIZE + j] = random_surface();
+
+    // Set a landmine at (10, 8)
+    surface_map[170] = LANDMINE;
+
+    return surface_map;
+}
+
+int * generate_costs_map(const Surface * surface_map, Method method)
+{
+    int * costs_map = (int *) malloc(sizeof(int) * GRID_SIZE * GRID_SIZE);
 
     // If method ia FASTEST or SAFEST set the surface costs
     // If method is SHORTEST set all the surface costs to 1 except for mine nodes
     for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
-        grid[i] = rand() % 100 + 1;
-
-    // Set a landmine
-    grid[170] = LANDMINE;
+        costs_map[i] = surface_map[i];
 
     // If method is SAFEST increase the cost of nearby nodes
     if (method == SAFEST) {
         for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-            if (grid[i] == LANDMINE) {
+            if (costs_map[i] == LANDMINE) {
                 int x = i % GRID_SIZE;
                 int y = i / GRID_SIZE;
 
-                for (int j = -4; j <= 4; j++) {
-                    for (int k = -4; k <= 4; k++) {
+                for (int j = -3; j <= 3; j++) {
+                    for (int k = -3; k <= 3; k++) {
                         if (x + j < 0 || x + j >= GRID_SIZE || y + k < 0 || y + k >= GRID_SIZE)
                             continue;
 
                         int index = (y + k) * GRID_SIZE + (x + j);
 
-                        if (grid[index] != LANDMINE)
-                            grid[index] += ((5-abs(j)) * (5-abs(k)) * 10);
+                        if (costs_map[index] != LANDMINE)
+                            costs_map[index] += ((4-abs(j)) * (4-abs(k)) * 10);
                     }
                 }
             }
         }
     }
 
-    return grid;
+    return costs_map;
 }
 
-void print_grid(const int * grid)
-{
-    printf("COSTS ->\n   ");
-    // Print X coordinates
-    for (int i = 0; i < GRID_SIZE; i++) {
-        printf(" %.2d ", i);
-    }
-
-    printf("\n");
-
-    // For each row print line
-    for (int i = 0; i < GRID_SIZE; i++) {
-        // For each column in row print row Y coordinate
-        printf("%.2d ", i);
-
-        // For each column in row print node cost
-        for(int j = 0; j < GRID_SIZE; j++) {
-            int cost = grid[i * GRID_SIZE + j];
-            if (cost != INF)
-                printf("%.3d ", cost);
-            else
-                printf(" \u2622  ");
-        }
-
-        printf("\n");
-    }
-
-    printf("\n");
-}
-
-Node * find_path(Node * start, Node * end, const int * grid)
+Node * find_path(Node * start, Node * end, const int * costs_map)
 {
     Node * open_nodes[GRID_SIZE * GRID_SIZE] = {start};
     Node * closed_nodes[GRID_SIZE * GRID_SIZE] = {NULL};
@@ -122,7 +132,7 @@ Node * find_path(Node * start, Node * end, const int * grid)
                 if (coordinates.x < 0 || coordinates.x >= GRID_SIZE || coordinates.y < 0 || coordinates.y >= GRID_SIZE)
                     continue;
 
-                int cost = grid[coordinates.y * GRID_SIZE + coordinates.x];
+                int cost = costs_map[coordinates.y * GRID_SIZE + coordinates.x];
 
                 // If the neighbour is a landmine, skip it
                 if (cost == INF)
@@ -194,58 +204,140 @@ void delete_node(Node * nodes[], int * length, int index)
     *length -= 1;
 }
 
-void print_path(Node * path)
+void add_path_to_surface_map(Node * start, Node * end, Node * path, Surface * surface_map)
 {
     Node * current = path;
-    if (path == NULL) {
-        printf("NO PATH FOUND\n");
-    } else {
-        printf("PATH FOUND ->\n");
-    }
 
     while (current != NULL) {
-        printf("(%d, %d) -> %.2Lf\n", current->coordinates.x, current->coordinates.y, current->f);
+        surface_map[current->coordinates.y * GRID_SIZE + current->coordinates.x] = ROAD;
         current = current->parent;
+    }
+
+    surface_map[start->coordinates.y * GRID_SIZE + start->coordinates.x] = START;
+    surface_map[end->coordinates.y * GRID_SIZE + end->coordinates.x] = END;
+}
+
+void print_surface_map(const Surface * surface_map)
+{
+    printf("MAP ->\n   ");
+    // Print X coordinates
+    for (int i = 0; i < GRID_SIZE; i++) {
+        printf("%.2d ", i);
+    }
+
+    printf("\n");
+
+    // For each row print line
+    for (int i = 0; i < GRID_SIZE; i++) {
+        // For each column in row print row Y coordinate
+        printf("%.2d ", i);
+
+        for(int j = 0; j < GRID_SIZE; j++)
+            print_surface_node(surface_map[i * GRID_SIZE + j]);
+
+        printf("\n");
+    }
+
+    printf("\n");
+    print_surface_node(START);
+    printf(" -> START");
+    printf("\n");
+    print_surface_node(END);
+    printf(" -> END");
+    printf("\n");
+    print_surface_node(ROAD);
+    printf(" -> PATH");
+    printf("\n");
+    print_surface_node(GRASS);
+    printf(" -> GRASS");
+    printf("\n");
+    print_surface_node(CITY);
+    printf(" -> CITY");
+    printf("\n");
+    print_surface_node(FORREST);
+    printf(" -> FORREST");
+    printf("\n");
+    print_surface_node(WATER);
+    printf(" -> WATER");
+    printf("\n");
+    print_surface_node(LANDMINE);
+    printf(" -> LANDMINE");
+    printf("\n");
+}
+
+void print_surface_node(Surface surface)
+{
+    switch (surface) {
+        case GRASS:
+            printf(ANSI_COLOR_GREEN);
+            printf("\u2591\u2591 ");
+            printf(ANSI_COLOR_RESET);
+            break;
+        case CITY:
+            printf(ANSI_COLOR_MAGENTA);
+            printf("\u2591\u2591 ");
+            printf(ANSI_COLOR_RESET);
+            break;
+        case FORREST:
+            printf(ANSI_COLOR_YELLOW);
+            printf("\u2591\u2591 ");
+            printf(ANSI_COLOR_RESET);
+            break;
+        case WATER:
+            printf(ANSI_COLOR_BLUE);
+            printf("\u2591\u2591 ");
+            printf(ANSI_COLOR_RESET);
+            break;
+        case LANDMINE:
+            printf(ANSI_COLOR_RED);
+            printf("\u2593\u2593 ");
+            printf(ANSI_COLOR_RESET);
+            break;
+        case START:
+        case END:
+            printf(ANSI_COLOR_CYAN);
+            printf("\u2593\u2593 ");
+            printf(ANSI_COLOR_RESET);
+            break;
+        case ROAD:
+            printf("\u2591\u2591 ");
+            break;
+        default:
+            break;
     }
 }
 
-void print_colored()
+void print_costs_map(const int * costs_map)
 {
-    // NODE -> \u2593
-    // MINE -> \u2622
+    printf("COSTS ->\n   ");
+    // Print X coordinates
+    for (int i = 0; i < GRID_SIZE; i++) {
+        printf(" %.2d ", i);
+    }
 
     printf("\n");
-    printf("Color example ->\n");
 
-    printf(ANSI_COLOR_RED);
-    printf("R E D \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf(ANSI_COLOR_GREEN);
-    printf("G R E E N \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf(ANSI_COLOR_YELLOW);
-    printf("Y E L L O W \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf(ANSI_COLOR_BLUE);
-    printf("B L U E \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf(ANSI_COLOR_MAGENTA);
-    printf("M A G E N T A \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2593\n");
-    printf(ANSI_COLOR_CYAN);
-    printf("C Y A N \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2622 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593\n");
-    printf("\u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593 \u2622 \u2593 \u2593 \u2593\n");
-    printf(ANSI_COLOR_RESET);
+    // For each row print line
+    for (int i = 0; i < GRID_SIZE; i++) {
+        // For each column in row print row Y coordinate
+        printf("%.2d ", i);
+
+        for(int j = 0; j < GRID_SIZE; j++)
+        {
+            if (costs_map[i * GRID_SIZE + j] == INF)
+            {
+                printf(ANSI_COLOR_RED);
+                printf(" \u2622  ");
+                printf(ANSI_COLOR_RESET);
+            }
+            else
+            {
+                printf("%.3d ", costs_map[i * GRID_SIZE + j]);
+            }
+        }
+
+        printf("\n");
+    }
+
+    printf("\n");
 }

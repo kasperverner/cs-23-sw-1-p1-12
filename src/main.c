@@ -14,17 +14,43 @@
         The f score is the value which the algorithm uses to make decisions.
 */
 
-int main(void) {
-    int * grid = init_grid(SAFEST);
-    print_grid(grid);
+int main(void)
+{
+    // TODO: Ask the user for the start, end coordinates and the method to use
+    Method method = SAFEST;
+    Coordinates start_coordinates = {0, 0};
+    Coordinates end_coordinates = {4, 4};
 
-    Node * start = create_node((Coordinates) {0, 0}, NULL, 0, INF);
-    Node * end = create_node((Coordinates) {14, 12}, NULL, 0, 0);
+    // Get the surface map
+    Surface * surface_map = generate_surface_map();
 
-    Node * path = find_path(start, end, grid);
-    print_path(path);
+    // Generate the costs map using the surface map and the chosen method
+    int * costs_map = generate_costs_map(surface_map, method);
+    print_costs_map(costs_map);
 
-    // print_colored();
+    // Create the start and end nodes
+    Node * start = create_node(start_coordinates, NULL, 0, INF);
+    Node * end = create_node(end_coordinates, NULL, 0, 0);
 
-    free(grid);
+    // Find the path
+    Node * path = find_path(start, end, costs_map);
+
+    // If a path was found, add it to the surface map and print it
+    if (path != NULL)
+    {
+        printf("PATH FOUND FROM (%d, %d) -> (%d, %d)\n",
+               start_coordinates.x, start_coordinates.y, end_coordinates.x, end_coordinates.y);
+
+        add_path_to_surface_map(start, end, path, surface_map);
+        print_surface_map(surface_map);
+    }
+    else
+    {
+        printf("NO PATH FOUND FROM (%d, %d) -> (%d, %d)\n",
+               start_coordinates.x, start_coordinates.y, end_coordinates.x, end_coordinates.y);
+    }
+
+    // Free the memory
+    free(surface_map);
+    free(costs_map);
 }
