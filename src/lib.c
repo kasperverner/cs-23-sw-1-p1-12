@@ -36,6 +36,7 @@ enum Surface random_surface()
 
 Surface * generate_surface_map()
 {
+    // Allocate memory for the surface map
     Surface * surface_map = (Surface *) malloc(sizeof(Surface) * GRID_SIZE * GRID_SIZE);
 
     // Initialize the random seed
@@ -53,36 +54,53 @@ Surface * generate_surface_map()
 
 int * generate_costs_map(const Surface * surface_map, Method method)
 {
+    // Allocate memory for the costs map
     int * costs_map = (int *) malloc(sizeof(int) * GRID_SIZE * GRID_SIZE);
 
     // If method ia FASTEST or SAFEST set the surface costs
     // If method is SHORTEST set all the surface costs to 1 except for mine nodes
     for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
-        costs_map[i] = surface_map[i];
+        if (method == FASTEST || method == SAFEST)
+            costs_map[i] = surface_map[i];
+        else if (surface_map[i] == LANDMINE)
+            costs_map[i] = INF;
+        else
+            costs_map[i] = 1;
 
     // If method is SAFEST increase the cost of nearby nodes
-    if (method == SAFEST) {
-        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-            if (costs_map[i] == LANDMINE) {
-                int x = i % GRID_SIZE;
-                int y = i / GRID_SIZE;
+    if (method == SAFEST)
+        add_danger_zones(costs_map);
 
-                for (int j = -3; j <= 3; j++) {
-                    for (int k = -3; k <= 3; k++) {
-                        if (x + j < 0 || x + j >= GRID_SIZE || y + k < 0 || y + k >= GRID_SIZE)
-                            continue;
+    return costs_map;
+}
 
-                        int index = (y + k) * GRID_SIZE + (x + j);
+void add_danger_zones(int * costs_map)
+{
+    for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
+    {
+        if (costs_map[i] == LANDMINE)
+        {
+            int x = i % GRID_SIZE;
+            int y = i / GRID_SIZE;
 
-                        if (costs_map[index] != LANDMINE)
-                            costs_map[index] += ((4-abs(j)) * (4-abs(k)) * 10);
-                    }
+            // Increase the cost of nearby nodes
+            for (int j = -DANGER_ZONE_RADIUS; j <= DANGER_ZONE_RADIUS; j++)
+            {
+                for (int k = -DANGER_ZONE_RADIUS; k <= DANGER_ZONE_RADIUS; k++)
+                {
+                    // If the node is outside the grid, skip it
+                    if (x + j < 0 || x + j >= GRID_SIZE || y + k < 0 || y + k >= GRID_SIZE)
+                        continue;
+
+                    int index = (y + k) * GRID_SIZE + (x + j);
+
+                    // If the node is not a landmine, increase the costs by the danger zone radius - distance from the mine times 10
+                    if (costs_map[index] != LANDMINE)
+                        costs_map[index] += ((DANGER_ZONE_RADIUS-abs(j)+1) * (DANGER_ZONE_RADIUS-abs(k)+1) * 10);
                 }
             }
         }
     }
-
-    return costs_map;
 }
 
 Node * find_path(Node * start, Node * end, const int * costs_map)
@@ -93,13 +111,16 @@ Node * find_path(Node * start, Node * end, const int * costs_map)
     int open_nodes_length = 1;
     int closed_nodes_length = 0;
 
-    while (open_nodes_length > 0) {
+    while (open_nodes_length > 0)
+    {
         Node * current_node = open_nodes[0];
         int current_index = 0;
 
         // Set current to the open node with the lowest f
-        for (int i = 0; i < open_nodes_length; i++) {
-            if (open_nodes[i]->f < current_node->f) {
+        for (int i = 0; i < open_nodes_length; i++)
+        {
+            if (open_nodes[i]->f < current_node->f)
+            {
                 current_node = open_nodes[i];
                 current_index = i;
             }
@@ -117,6 +138,7 @@ Node * find_path(Node * start, Node * end, const int * costs_map)
         // Add the current node to the closed nodes
         closed_nodes[closed_nodes_length++] = current_node;
 
+        // TODO: Extract this to a function
         // Get the neighbours of the current node
         for (int i = -1; i <= 1; i++)
         {
@@ -145,18 +167,24 @@ Node * find_path(Node * start, Node * end, const int * costs_map)
                 // Assign neighbour node
                 Node * neighbour = create_node(coordinates, current_node, g, h);
 
-                // If the coordinate has been closed, skip it
+                // TODO : Extract this to a function
+                // If the coordinate has been closed, skip it as it will never be the best path
                 int skip = 0;
-                for (int k = 0; k < closed_nodes_length; k++) {
-                    if (closed_nodes[k]->coordinates.x == coordinates.x && closed_nodes[k]->coordinates.y == coordinates.y) {
+                for (int k = 0; k < closed_nodes_length; k++)
+                {
+                    if (closed_nodes[k]->coordinates.x == coordinates.x && closed_nodes[k]->coordinates.y == coordinates.y)
+                    {
                         skip = 1;
                         break;
                     }
                 }
 
-                // If the neighbour is already in the open nodes with lower f, skip it
-                for (int k = 0; k < open_nodes_length; k++) {
-                    if (open_nodes[k]->coordinates.x == neighbour->coordinates.x && open_nodes[k]->coordinates.y == neighbour->coordinates.y && open_nodes[k]->f < neighbour->f) {
+                // TODO : Extract this to a function
+                // If the neighbour is already in the open nodes with lower f, skip it as it will never be the best path
+                for (int k = 0; k < open_nodes_length; k++)
+                {
+                    if (open_nodes[k]->coordinates.x == neighbour->coordinates.x && open_nodes[k]->coordinates.y == neighbour->coordinates.y && open_nodes[k]->f < neighbour->f)
+                    {
                         skip = 1;
                         break;
                     }
@@ -164,6 +192,17 @@ Node * find_path(Node * start, Node * end, const int * costs_map)
 
                 if (skip)
                     continue;
+
+                // TODO : Extract this to a function
+                // If the neighbour is already in the open nodes with higher f, remove it as it will be replaced with the current neighbour
+                for (int k = 0; k < open_nodes_length; k++)
+                {
+                    if (open_nodes[k]->coordinates.x == neighbour->coordinates.x && open_nodes[k]->coordinates.y == neighbour->coordinates.y && open_nodes[k]->f > neighbour->f)
+                    {
+                        delete_node(open_nodes, &open_nodes_length, k);
+                        break;
+                    }
+                }
 
                 // Add the neighbour to the open nodes
                 open_nodes[open_nodes_length++] = neighbour;
@@ -197,18 +236,22 @@ double calculate_heuristic_cost(Coordinates current, Coordinates end)
 // Remove node from array by shifting all nodes after the index one to the left and lowering length by 1
 void delete_node(Node * nodes[], int * length, int index)
 {
-    for (int i = index; i < *length - 1; i++) {
+    for (int i = index; i < *length - 1; i++)
+    {
         nodes[i] = nodes[i + 1];
     }
 
     *length -= 1;
 }
 
+// Traverse through the path and set the surface map nodes to ROAD
+// Set the start and end nodes to their respective values
 void add_path_to_surface_map(Node * start, Node * end, Node * path, Surface * surface_map)
 {
     Node * current = path;
 
-    while (current != NULL) {
+    while (current != NULL)
+    {
         surface_map[current->coordinates.y * GRID_SIZE + current->coordinates.x] = ROAD;
         current = current->parent;
     }
@@ -221,14 +264,16 @@ void print_surface_map(const Surface * surface_map)
 {
     printf("MAP ->\n   ");
     // Print X coordinates
-    for (int i = 0; i < GRID_SIZE; i++) {
+    for (int i = 0; i < GRID_SIZE; i++)
+    {
         printf("%.2d ", i);
     }
 
     printf("\n");
 
     // For each row print line
-    for (int i = 0; i < GRID_SIZE; i++) {
+    for (int i = 0; i < GRID_SIZE; i++)
+    {
         // For each column in row print row Y coordinate
         printf("%.2d ", i);
 
@@ -267,40 +312,41 @@ void print_surface_map(const Surface * surface_map)
 
 void print_surface_node(Surface surface)
 {
-    switch (surface) {
+    switch (surface)
+    {
         case GRASS:
             printf(ANSI_COLOR_GREEN);
-            printf("\u2591\u2591 ");
+            print_square(OPAQUE);
             printf(ANSI_COLOR_RESET);
             break;
         case CITY:
             printf(ANSI_COLOR_MAGENTA);
-            printf("\u2591\u2591 ");
+            print_square(OPAQUE);
             printf(ANSI_COLOR_RESET);
             break;
         case FORREST:
             printf(ANSI_COLOR_YELLOW);
-            printf("\u2591\u2591 ");
+            print_square(OPAQUE);
             printf(ANSI_COLOR_RESET);
             break;
         case WATER:
             printf(ANSI_COLOR_BLUE);
-            printf("\u2591\u2591 ");
+            print_square(OPAQUE);
             printf(ANSI_COLOR_RESET);
             break;
         case LANDMINE:
             printf(ANSI_COLOR_RED);
-            printf("\u2593\u2593 ");
+            print_square(SOLID);
             printf(ANSI_COLOR_RESET);
             break;
         case START:
         case END:
             printf(ANSI_COLOR_CYAN);
-            printf("\u2593\u2593 ");
+            print_square(SOLID);
             printf(ANSI_COLOR_RESET);
             break;
         case ROAD:
-            printf("\u2591\u2591 ");
+            print_square(SOLID);
             break;
         default:
             break;
@@ -311,14 +357,16 @@ void print_costs_map(const int * costs_map)
 {
     printf("COSTS ->\n   ");
     // Print X coordinates
-    for (int i = 0; i < GRID_SIZE; i++) {
+    for (int i = 0; i < GRID_SIZE; i++)
+    {
         printf(" %.2d ", i);
     }
 
     printf("\n");
 
     // For each row print line
-    for (int i = 0; i < GRID_SIZE; i++) {
+    for (int i = 0; i < GRID_SIZE; i++)
+    {
         // For each column in row print row Y coordinate
         printf("%.2d ", i);
 
@@ -340,4 +388,20 @@ void print_costs_map(const int * costs_map)
     }
 
     printf("\n");
+}
+
+void print_square(SquareMode mode)
+{
+    switch (mode)
+    {
+        case TRANSPARENT:
+            printf("\u2591\u2591 ");
+            break;
+        case OPAQUE:
+            printf("\u2592\u2592 ");
+            break;
+        case SOLID:
+            printf("\u2593\u2593 ");
+            break;
+    }
 }

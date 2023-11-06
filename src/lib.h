@@ -1,5 +1,6 @@
 #define INF 999999
 #define GRID_SIZE 20
+#define DANGER_ZONE_RADIUS 4
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -28,6 +29,14 @@ typedef enum Surface
     END = 102
 } Surface;
 
+typedef enum SquareMode
+{
+    TRANSPARENT = 0,
+    OPAQUE = 1,
+    SOLID = 2,
+} SquareMode;
+
+
 typedef struct Coordinates
 {
     int x;
@@ -49,6 +58,8 @@ Surface * generate_surface_map();
 
 int * generate_costs_map(const Surface * surface_map, Method method);
 
+void add_danger_zones(int * costs_map);
+
 Node * find_path(Node * start, Node * end, const int * costs_map);
 
 Node * create_node(Coordinates coordinates, Node* parent, long double g, long double h);
@@ -64,3 +75,5 @@ void print_surface_map(const Surface * surface_map);
 void print_surface_node(Surface surface);
 
 void print_costs_map(const int * costs_map);
+
+void print_square(SquareMode mode);

@@ -17,9 +17,9 @@
 int main(void)
 {
     // TODO: Ask the user for the start, end coordinates and the method to use
-    Method method = SAFEST;
-    Coordinates start_coordinates = {0, 0};
-    Coordinates end_coordinates = {4, 4};
+    Method method = SHORTEST;
+    Coordinates start_coordinates = {8, 3};
+    Coordinates end_coordinates = {14, 14};
 
     // Get the surface map
     Surface * surface_map = generate_surface_map();
