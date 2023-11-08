@@ -8,7 +8,6 @@
 #define P_CITY 0.1
 #define P_FORREST 0.3
 
-
 // Temporary random surface generator
 enum Surface random_surface()
 {
@@ -47,25 +46,32 @@ Surface * generate_surface_map()
             surface_map[i * GRID_SIZE + j] = random_surface();
 
     // Set a landmine at (10, 8)
-    surface_map[170] = LANDMINE;
+    surface_map[8 * GRID_SIZE + 10] = LANDMINE;
 
     return surface_map;
 }
 
-int * generate_costs_map(const Surface * surface_map, Method method)
+int * generate_costs_map(const Surface * surface_map, Method method, char only_danger_zones)
 {
     // Allocate memory for the costs map
     int * costs_map = (int *) malloc(sizeof(int) * GRID_SIZE * GRID_SIZE);
 
     // If method ia FASTEST or SAFEST set the surface costs
     // If method is SHORTEST set all the surface costs to 1 except for mine nodes
-    for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
-        if (method == FASTEST || method == SAFEST)
-            costs_map[i] = surface_map[i];
-        else if (surface_map[i] == LANDMINE)
-            costs_map[i] = INF;
-        else
-            costs_map[i] = 1;
+    if (only_danger_zones)
+        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
+            if (surface_map[i] == LANDMINE)
+                costs_map[i] = INF;
+            else
+                costs_map[i] = 0;
+    else
+        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++)
+            if (method == FASTEST || method == SAFEST)
+                costs_map[i] = surface_map[i];
+            else if (surface_map[i] == LANDMINE)
+                costs_map[i] = INF;
+            else
+                costs_map[i] = 1;
 
     // If method is SAFEST increase the cost of nearby nodes
     if (method == SAFEST)
@@ -113,104 +119,137 @@ Node * find_path(Node * start, Node * end, const int * costs_map)
 
     while (open_nodes_length > 0)
     {
+        // TODO: Extract this to find_next_node function
+        // Find the next node to be evaluated
         Node * current_node = open_nodes[0];
-        int current_index = 0;
+        int current_node_index = 0;
 
-        // Set current to the open node with the lowest f
         for (int i = 0; i < open_nodes_length; i++)
-        {
             if (open_nodes[i]->f < current_node->f)
             {
                 current_node = open_nodes[i];
-                current_index = i;
+                current_node_index = i;
             }
-        }
 
         // If the current node is the end node, return the path
-        if (current_node->coordinates.x == end->coordinates.x && current_node->coordinates.y == end->coordinates.y)
-        {
+        if (coordinate_is_match(current_node->coordinates, end->coordinates))
             return current_node;
-        }
 
-        // Remove the current node from the open nodes
-        delete_node(open_nodes, &open_nodes_length, current_index);
+        // Close the current node and remove it from the open nodes
+        close_open_node(open_nodes, &open_nodes_length, closed_nodes, &closed_nodes_length, current_node, current_node_index);
 
-        // Add the current node to the closed nodes
-        closed_nodes[closed_nodes_length++] = current_node;
+        // Add the neighbours of the current node to the open nodes
+        add_node_neighbours_to_open_nodes(open_nodes, &open_nodes_length, closed_nodes, closed_nodes_length, current_node, end, costs_map);
+    }
 
-        // TODO: Extract this to a function
-        // Get the neighbours of the current node
-        for (int i = -1; i <= 1; i++)
+    // Return NULL if no path was found to the end node
+    return NULL;
+}
+
+int find_next_node(Node * open_nodes[], int open_nodes_length, Node * current_node)
+{
+    int current_index = 0;
+
+    for (int i = 0; i < open_nodes_length; i++)
+    {
+        if (open_nodes[i]->f < current_node->f)
         {
-            for (int j = -1; j <= 1; j++)
-            {
-                if (i == 0 && j == 0)
-                    continue;
-
-                // Assign neighbour coordinates
-                Coordinates coordinates = (Coordinates) {current_node->coordinates.x + i, current_node->coordinates.y + j};
-
-                // If the neighbour is outside the grid, skip it
-                if (coordinates.x < 0 || coordinates.x >= GRID_SIZE || coordinates.y < 0 || coordinates.y >= GRID_SIZE)
-                    continue;
-
-                int cost = costs_map[coordinates.y * GRID_SIZE + coordinates.x];
-
-                // If the neighbour is a landmine, skip it
-                if (cost == INF)
-                    continue;
-
-                // Calculate the g, h and f values for the neighbour
-                long double g = current_node->g + cost;
-                long double h = calculate_heuristic_cost(coordinates, end->coordinates);
-
-                // Assign neighbour node
-                Node * neighbour = create_node(coordinates, current_node, g, h);
-
-                // TODO : Extract this to a function
-                // If the coordinate has been closed, skip it as it will never be the best path
-                int skip = 0;
-                for (int k = 0; k < closed_nodes_length; k++)
-                {
-                    if (closed_nodes[k]->coordinates.x == coordinates.x && closed_nodes[k]->coordinates.y == coordinates.y)
-                    {
-                        skip = 1;
-                        break;
-                    }
-                }
-
-                // TODO : Extract this to a function
-                // If the neighbour is already in the open nodes with lower f, skip it as it will never be the best path
-                for (int k = 0; k < open_nodes_length; k++)
-                {
-                    if (open_nodes[k]->coordinates.x == neighbour->coordinates.x && open_nodes[k]->coordinates.y == neighbour->coordinates.y && open_nodes[k]->f < neighbour->f)
-                    {
-                        skip = 1;
-                        break;
-                    }
-                }
-
-                if (skip)
-                    continue;
-
-                // TODO : Extract this to a function
-                // If the neighbour is already in the open nodes with higher f, remove it as it will be replaced with the current neighbour
-                for (int k = 0; k < open_nodes_length; k++)
-                {
-                    if (open_nodes[k]->coordinates.x == neighbour->coordinates.x && open_nodes[k]->coordinates.y == neighbour->coordinates.y && open_nodes[k]->f > neighbour->f)
-                    {
-                        delete_node(open_nodes, &open_nodes_length, k);
-                        break;
-                    }
-                }
-
-                // Add the neighbour to the open nodes
-                open_nodes[open_nodes_length++] = neighbour;
-            }
+            current_node = open_nodes[i];
+            current_index = i;
         }
     }
 
-    return NULL;
+    return current_index;
+}
+
+void close_open_node(Node * open_nodes[], int * open_nodes_length, Node * closed_nodes[], int * closed_nodes_length, Node * current_node, int current_node_index)
+{
+    // Remove node from array by shifting all nodes after the index one to the left and lowering length by 1
+    for (int i = current_node_index; i < * open_nodes_length - 1; i++)
+    {
+        open_nodes[i] = open_nodes[i + 1];
+    }
+
+    (*open_nodes_length) -= 1;
+
+    // Add the current node to the closed nodes
+    closed_nodes[(* closed_nodes_length)++] = current_node;
+}
+
+void add_node_neighbours_to_open_nodes(
+        Node * open_nodes[], int * open_nodes_length,
+        Node * closed_nodes[], int closed_nodes_length,
+        Node * current_node, Node * end,
+        const int * costs_map)
+{
+    // For each horizontal neighbour of the current node
+    for (int i = -1; i <= 1; i++)
+    {
+        // For each vertical neighbour of the current node
+        for (int j = -1; j <= 1; j++)
+        {
+            // Skip the current node
+            if (i == 0 && j == 0)
+                continue;
+
+            // Assign neighbour coordinates
+            Coordinates coordinates = (Coordinates) {
+                current_node->coordinates.x + i,
+                current_node->coordinates.y + j};
+
+            // If the neighbour is outside the grid, skip it
+            if (coordinates.x < 0 || coordinates.x >= GRID_SIZE || coordinates.y < 0 || coordinates.y >= GRID_SIZE)
+                continue;
+
+            // Find the coordinate cost in the costs map
+            int cost = costs_map[coordinates.y * GRID_SIZE + coordinates.x];
+
+            // If the neighbour is a landmine, skip it
+            if (cost == INF)
+                continue;
+
+            // Assign neighbour node
+            Node * neighbour = create_node(
+                    coordinates,
+                    current_node,
+                    current_node->g + cost,
+                    calculate_heuristic_cost(coordinates, end->coordinates));
+
+            // If the coordinate has been closed, skip it as it will never be the best path
+            if (coordinates_are_closed(neighbour, closed_nodes, closed_nodes_length))
+                continue;
+
+            // If the coordinate is already open and the new f is higher, skip it
+            if (coordinates_are_open(neighbour, open_nodes, *open_nodes_length))
+                continue;
+
+            // Add the neighbour to the open nodes
+            open_nodes[(* open_nodes_length)++] = neighbour;
+        }
+    }
+}
+
+char coordinates_are_closed(Node * node, Node * closed_nodes[], int closed_nodes_length)
+{
+    for (int i = 0; i < closed_nodes_length; i++)
+        if (coordinate_is_match(closed_nodes[i]->coordinates, node->coordinates))
+            return 1;
+
+    return 0;
+}
+
+char coordinates_are_open(Node * node, Node * open_nodes[], int open_nodes_length)
+{
+    for (int i = 0; i < open_nodes_length; i++)
+        if (coordinate_is_match(open_nodes[i]->coordinates, node->coordinates))
+        {
+            if (open_nodes[i]->f > node->f)
+                open_nodes[i] = node;
+
+            return 1;
+        }
+
+    return 0;
 }
 
 Node * create_node(Coordinates coordinates, Node* parent, long double g, long double h)
@@ -225,7 +264,6 @@ Node * create_node(Coordinates coordinates, Node* parent, long double g, long do
     return node;
 }
 
-
 // The heuristic cost for a node is the distance from the current node to the end node
 // We use the pythagorean theorem to find the direct distance from current to end
 double calculate_heuristic_cost(Coordinates current, Coordinates end)
@@ -233,15 +271,9 @@ double calculate_heuristic_cost(Coordinates current, Coordinates end)
     return sqrt(pow(current.x - end.x, 2) + pow(current.y - end.y, 2));
 }
 
-// Remove node from array by shifting all nodes after the index one to the left and lowering length by 1
-void delete_node(Node * nodes[], int * length, int index)
+int coordinate_is_match(Coordinates a, Coordinates b)
 {
-    for (int i = index; i < *length - 1; i++)
-    {
-        nodes[i] = nodes[i + 1];
-    }
-
-    *length -= 1;
+    return a.x == b.x && a.y == b.y;
 }
 
 // Traverse through the path and set the surface map nodes to ROAD

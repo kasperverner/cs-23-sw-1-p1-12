@@ -16,18 +16,18 @@
 
 int main(void)
 {
-    // TODO: Ask the user for the start, end coordinates and the method to use
-    Method method = SHORTEST;
-    Coordinates start_coordinates = {8, 3};
-    Coordinates end_coordinates = {14, 14};
+    // TODO: Ask the user for the start and end coordinates and the method to use
+    Method method = SAFEST;
+    Coordinates start_coordinates = {0, 0};
+    Coordinates end_coordinates = {36, 37};
 
     // Get the surface map
     Surface * surface_map = generate_surface_map();
 
     // Generate the costs map using the surface map and the chosen method
-    int * costs_map = generate_costs_map(surface_map, method);
+    int * costs_map = generate_costs_map(surface_map, method, 0);
     print_costs_map(costs_map);
-
+    
     // Create the start and end nodes
     Node * start = create_node(start_coordinates, NULL, 0, INF);
     Node * end = create_node(end_coordinates, NULL, 0, 0);
@@ -49,6 +49,7 @@ int main(void)
         printf("NO PATH FOUND FROM (%d, %d) -> (%d, %d)\n",
                start_coordinates.x, start_coordinates.y, end_coordinates.x, end_coordinates.y);
     }
+
 
     // Free the memory
     free(surface_map);

@@ -1,5 +1,5 @@
 #define INF 999999
-#define GRID_SIZE 20
+#define GRID_SIZE 40
 #define DANGER_ZONE_RADIUS 4
 
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -36,7 +36,6 @@ typedef enum SquareMode
     SOLID = 2,
 } SquareMode;
 
-
 typedef struct Coordinates
 {
     int x;
@@ -56,17 +55,27 @@ Surface random_surface();
 
 Surface * generate_surface_map();
 
-int * generate_costs_map(const Surface * surface_map, Method method);
+int * generate_costs_map(const Surface * surface_map, Method method, char only_danger_zones);
 
 void add_danger_zones(int * costs_map);
 
 Node * find_path(Node * start, Node * end, const int * costs_map);
 
+int find_next_node(Node * open_nodes[], int open_nodes_length, Node * current_node);
+
+void close_open_node(Node * open_nodes[], int * open_nodes_length, Node * closed_nodes[], int * closed_nodes_length, Node * current_node, int current_node_index);
+
+void add_node_neighbours_to_open_nodes(Node * open_nodes[], int * open_nodes_length, Node * closed_nodes[], int closed_nodes_length, Node * current_node, Node * end, const int * costs_map);
+
+char coordinates_are_closed(Node * node, Node * closed_nodes[], int closed_nodes_length);
+
+char coordinates_are_open(Node * node, Node * open_nodes[], int open_nodes_length);
+
 Node * create_node(Coordinates coordinates, Node* parent, long double g, long double h);
 
 double calculate_heuristic_cost(Coordinates current, Coordinates end);
 
-void delete_node(Node * nodes[], int * length, int index);
+int coordinate_is_match(Coordinates a, Coordinates b);
 
 void add_path_to_surface_map(Node * start, Node * end, Node * path, Surface * surface_map);
 
