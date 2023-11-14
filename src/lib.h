@@ -12,9 +12,9 @@
 
 typedef enum Method
 {
-    SHORTEST = 0,
-    FASTEST = 1,
-    SAFEST = 2
+    SHORTEST = 1,
+    FASTEST = 2,
+    SAFEST = 3
 } Method;
 
 typedef enum Surface
@@ -22,19 +22,20 @@ typedef enum Surface
     ROAD = 1,
     GRASS = 5,
     CITY = 10,
-    FORREST = 20,
+    FORREST = 15,
     WATER = 100,
     LANDMINE = INF,
     START = 101,
-    END = 102
+    END = 102,
+    PATH = 103
 } Surface;
 
-typedef enum SquareMode
+typedef enum Fill
 {
     TRANSPARENT = 0,
     OPAQUE = 1,
     SOLID = 2,
-} SquareMode;
+} Fill;
 
 typedef struct Coordinates
 {
@@ -55,7 +56,7 @@ Surface random_surface();
 
 Surface * generate_surface_map();
 
-int * generate_costs_map(const Surface * surface_map, Method method, char only_danger_zones);
+    int * generate_costs_map(const Surface * surface_map, Method method, char only_danger_zones);
 
 void add_danger_zones(int * costs_map);
 
@@ -85,4 +86,4 @@ void print_surface_node(Surface surface);
 
 void print_costs_map(const int * costs_map);
 
-void print_square(SquareMode mode);
+void print_square(Fill mode);

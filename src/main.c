@@ -16,11 +16,24 @@
 
 int main(void)
 {
-    // TODO: Ask the user for the start and end coordinates and the method to use
-    Method method = SAFEST;
-    Coordinates start_coordinates = {0, 0};
-    Coordinates end_coordinates = {36, 37};
+    // TODO: refactor this into a function that returns the coordinates and validates input
+    printf("Enter the start coordinates: x, y\n> ");
+    Coordinates start_coordinates;
+    scanf("%d, %d", &start_coordinates.x, &start_coordinates.y);
 
+    printf("Enter the end coordinates: x, y\n> ");
+    Coordinates end_coordinates;
+    scanf("%d, %d", &end_coordinates.x, &end_coordinates.y);
+
+    Method method;
+    printf("Choose the which kind of path, you want to find:\n");
+    printf("1) Shortest path\n");
+    printf("2) Fastest path\n");
+    printf("3) Safest path\n");
+    printf("> ");
+    scanf("%d", &method);
+
+    printf("Do you want to add danger zones? (y/n)\n> ");
     // Get the surface map
     Surface * surface_map = generate_surface_map();
 

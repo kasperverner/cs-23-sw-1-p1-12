@@ -5,8 +5,10 @@
 #include <time.h>
 
 #define P_GRASS 0.4
+#define P_ROAD 0.1
 #define P_CITY 0.1
 #define P_FORREST 0.3
+
 
 // Temporary random surface generator
 enum Surface random_surface()
@@ -19,11 +21,15 @@ enum Surface random_surface()
     {
         return GRASS;
     }
-    else if (r < P_GRASS + P_CITY)
+    else if (r < P_GRASS + P_ROAD)
+    {
+        return ROAD;
+    }
+    else if (r < P_GRASS + P_ROAD + P_CITY)
     {
         return CITY;
     }
-    else if (r < P_GRASS + P_CITY + P_FORREST)
+    else if (r < P_GRASS + P_ROAD + P_CITY + P_FORREST)
     {
         return FORREST;
     }
@@ -346,6 +352,8 @@ void print_surface_node(Surface surface)
 {
     switch (surface)
     {
+        case ROAD:
+            print_square(TRANSPARENT);
         case GRASS:
             printf(ANSI_COLOR_GREEN);
             print_square(OPAQUE);
@@ -377,7 +385,7 @@ void print_surface_node(Surface surface)
             print_square(SOLID);
             printf(ANSI_COLOR_RESET);
             break;
-        case ROAD:
+        case PATH:
             print_square(SOLID);
             break;
         default:
@@ -422,7 +430,7 @@ void print_costs_map(const int * costs_map)
     printf("\n");
 }
 
-void print_square(SquareMode mode)
+void print_square(Fill mode)
 {
     switch (mode)
     {
