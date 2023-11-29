@@ -89,6 +89,40 @@ node_t *recursively_find_path(const int * map, int map_length,
 }
 
 /**
+ * Get the data from the first node in the list.
+ * @param list the list to get the first node of.
+ * @return the node_t data from the first node of the list.
+ */
+node_t *get_first_node_from_list(list_node_t * list)
+{
+    if (list == NULL)
+    {
+        return NULL;
+    }
+
+    return list->data;
+}
+
+/**
+ * Find a node in a list of nodes.
+ * @param list the list of nodes.
+ * @param coordinates the coordinates of the node to find.
+ * @return the node if it is found, NULL otherwise.
+ */
+node_t *find_node_in_list(list_node_t *list, coordinates_t coordinates)
+{
+    while (list != NULL)
+    {
+        if (coordinate_is_match(list->data->coordinates, coordinates))
+            return list->data;
+
+        list = list->next;
+    }
+
+    return NULL;
+}
+
+/**
  * Allocate a new node and prepend it to the list.
  * @param data the data to be stored in the node.
  * @param next the next node in the list.
@@ -111,21 +145,6 @@ list_node_t *prepend_node_to_list(node_t *data, list_node_t *next)
 }
 
 /**
- * Get the data from the first node in the list.
- * @param list the list to get the first node of.
- * @return the node_t data from the first node of the list.
- */
-node_t *get_first_node_from_list(list_node_t * list)
-{
-    if (list == NULL)
-    {
-        return NULL;
-    }
-
-    return list->data;
-}
-
-/**
  * Removes the first node from the list.
  * @param list the list to remove the first node from.
  * @return the list_node_t without the first node.
@@ -140,16 +159,6 @@ list_node_t *remove_first_node_from_list(list_node_t * list)
     return list->next;
 }
 
-/**
- * Check if two coordinates are the same.
- * @param a the first coordinate.
- * @param b the second coordinate.
- * @return true if the coordinates are the same, false otherwise.
- */
-bool coordinate_is_match(coordinates_t a, coordinates_t b)
-{
-    return a.x == b.x && a.y == b.y;
-}
 
 /**
  * Add the neighbours of the current node to the open nodes if the neighbour is open with a lower f score or neighbour is already closed.
@@ -215,76 +224,12 @@ list_node_t *add_node_neighbours_to_open_nodes(const int * map, int map_length,
             if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f <= new_node->f)
                 continue;
 
-            // If the coordinate is already open with higher f score, remove coordinates from the open nodes
-            if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f > new_node->f)
-                remove_coordinates_from_list(open_nodes, NULL, coordinates);
-
             // Add the neighbour node to the open nodes
             open_nodes = add_node_to_list_ordered_by_f(open_nodes, open_nodes, NULL, new_node);
         }
     }
 
     return open_nodes;
-}
-
-/**
- * Calculate the heuristic cost to move from the current node to the end node.
- * The heuristic cost is the distance between the current node and the end node.
- * Since the map is a grid, the heuristic cost can be calculated using the the pythagorean theorem.
- * @param current_coordinates the coordinates of the current node.
- * @param end_coordinates the coordinates of the end node.
- * @return the heuristic cost to move from the current node to the end node.
- */
-double calculate_heuristic_cost(coordinates_t current_coordinates, coordinates_t end_coordinates)
-{
-    return sqrt(pow(current_coordinates.x - end_coordinates.x, 2) + pow(current_coordinates.y - end_coordinates.y, 2));
-}
-
-/**
- * Find a node in a list of nodes.
- * @param list the list of nodes.
- * @param coordinates the coordinates of the node to find.
- * @return the node if it is found, NULL otherwise.
- */
-node_t *find_node_in_list(list_node_t *list, coordinates_t coordinates)
-{
-    while (list != NULL)
-    {
-        if (coordinate_is_match(list->data->coordinates, coordinates))
-            return list->data;
-
-        list = list->next;
-    }
-
-    return NULL;
-}
-
-/**
- * Remove a node from a list of nodes by setting the previous node's next pointer to the current node's next pointer if the coordinates match.
- * @param current_node the current node.
- * @param previous_node the previous node.
- * @param coordinates the coordinates of the node to remove.
- */
-void remove_coordinates_from_list(list_node_t *current_node, list_node_t *previous_node, coordinates_t coordinates)
-{
-    if (current_node == NULL)
-        return;
-
-    if (coordinate_is_match(current_node->data->coordinates, coordinates))
-    {
-        list_node_t *next_node = current_node->next;
-        free(current_node);
-
-        // If the current node is the first node, set previous node to the next node
-        if (previous_node == NULL)
-            previous_node = next_node;
-        else
-            previous_node->next = next_node;
-
-        return;
-    }
-
-    remove_coordinates_from_list(current_node->next, current_node, coordinates);
 }
 
 /**
@@ -325,6 +270,30 @@ list_node_t *add_node_to_list_ordered_by_f(list_node_t *first_node, list_node_t 
 
     // If the node_to_add has a higher f score than the current node, recursively add the node_to_add to the next node
     return add_node_to_list_ordered_by_f(first_node, current_node->next, current_node, node_to_add);
+}
+
+/**
+ * Check if two coordinates are the same.
+ * @param a the first coordinate.
+ * @param b the second coordinate.
+ * @return true if the coordinates are the same, false otherwise.
+ */
+bool coordinate_is_match(coordinates_t a, coordinates_t b)
+{
+    return a.x == b.x && a.y == b.y;
+}
+
+/**
+ * Calculate the heuristic cost to move from the current node to the end node.
+ * The heuristic cost is the distance between the current node and the end node.
+ * Since the map is a grid, the heuristic cost can be calculated using the the pythagorean theorem.
+ * @param current_coordinates the coordinates of the current node.
+ * @param end_coordinates the coordinates of the end node.
+ * @return the heuristic cost to move from the current node to the end node.
+ */
+double calculate_heuristic_cost(coordinates_t current_coordinates, coordinates_t end_coordinates)
+{
+    return sqrt(pow(current_coordinates.x - end_coordinates.x, 2) + pow(current_coordinates.y - end_coordinates.y, 2));
 }
 
 /**

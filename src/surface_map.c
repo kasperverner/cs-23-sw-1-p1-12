@@ -2,33 +2,6 @@
 #include <time.h>
 #include "surface_map.h"
 
-/**
- * Populates the surface map with the surface types.
- * @param map the pointer to the first element of the surface map.
- * @param map_length the length of the surface map.
- * @param settings the settings provided by the user.
- */
-void populate_surface_map(surface_e *map, int map_length, settings_t settings)
-{
-    srand(time(NULL));
-
-    for (int x = 0; x < GRID_SIZE; x++)
-        for (int y = 0; y < GRID_SIZE; y++)
-            map[y * GRID_SIZE + x] = generate_random_surface();
-
-    // Set a landmine at (3, 18)
-    map[18 * GRID_SIZE + 3] = LANDMINE;
-
-    // Set a landmine at (10, 8)
-    map[8 * GRID_SIZE + 10] = LANDMINE;
-
-    // Set a landmine at (17, 15)
-    map[15 * GRID_SIZE + 17] = LANDMINE;
-
-    // Set a landmine at (18, 4)
-    map[4 * GRID_SIZE + 18] = LANDMINE;
-}
-
 #define P_GRASS 0.35
 #define P_FORREST 0.3
 #define P_ROAD 0.1
@@ -65,6 +38,33 @@ surface_e generate_random_surface(void)
     {
         return WATER;
     }
+}
+
+/**
+ * Populates the surface map with the surface types.
+ * @param map the pointer to the first element of the surface map.
+ * @param map_length the length of the surface map.
+ * @param settings the settings provided by the user.
+ */
+void populate_surface_map(surface_e *map, int map_length, settings_t settings)
+{
+    srand(time(NULL));
+
+    for (int x = 0; x < GRID_SIZE; x++)
+        for (int y = 0; y < GRID_SIZE; y++)
+            map[y * GRID_SIZE + x] = generate_random_surface();
+
+    // Set a landmine at (3, 18)
+    map[18 * GRID_SIZE + 3] = LANDMINE;
+
+    // Set a landmine at (10, 8)
+    map[8 * GRID_SIZE + 10] = LANDMINE;
+
+    // Set a landmine at (17, 15)
+    map[15 * GRID_SIZE + 17] = LANDMINE;
+
+    // Set a landmine at (18, 4)
+    map[4 * GRID_SIZE + 18] = LANDMINE;
 }
 
 /**
