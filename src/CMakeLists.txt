@@ -1,6 +1,17 @@
-add_library(lib lib.c)
-target_link_libraries(lib m)
-target_include_directories(lib PUBLIC .)
+add_library(settings settings.c)
+target_include_directories(settings PUBLIC .)
+
+add_library(surface_map surface_map.c)
+target_include_directories(surface_map PUBLIC .)
+
+add_library(cost_map cost_map.c)
+target_include_directories(cost_map PUBLIC .)
+
+add_library(path_algorithm path_algorithm.c)
+target_include_directories(path_algorithm PUBLIC .)
+
+add_library(visualizers visualizers.c)
+target_include_directories(visualizers PUBLIC .)
 
 add_executable(main main.c)
-target_link_libraries(main lib)
+target_link_libraries(main settings surface_map cost_map path_algorithm visualizers)

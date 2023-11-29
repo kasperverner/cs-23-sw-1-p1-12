@@ -1,70 +1,28 @@
-#include "lib.h"
-#include <stdio.h>
 #include <stdlib.h>
-
-/*
-  The variables f, g, and h here are used as part of the A* search algorithm.
-
-  g:    The cost it takes to move from the starting point to a given node on the grid.
-  h:    The heuristic — estimated — cost to move from a given node to the end point.
-        This is the distance between the current node and the end point.
-  f:    This is the sum of g and h.
-        This value is used to sort the nodes and choose which one should be explored next.
-        Nodes with lower f scores are prioritized as they are assumed to be faster to reach the end point.
-        The f score is the value which the algorithm uses to make decisions.
-*/
+#include "settings.h"
+#include "surface_map.h"
+#include "cost_map.h"
+#include "path_algorithm.h"
+#include "visualizers.h"
 
 int main(void)
 {
-    // TODO: refactor this into a function that returns the coordinates and validates input
-    printf("Enter the start coordinates: x, y\n> ");
-    Coordinates start_coordinates;
-    scanf("%d, %d", &start_coordinates.x, &start_coordinates.y);
+    settings_t settings = scan_settings(GRID_SIZE);
 
-    printf("Enter the end coordinates: x, y\n> ");
-    Coordinates end_coordinates;
-    scanf("%d, %d", &end_coordinates.x, &end_coordinates.y);
+    surface_e surface_map[GRID_SIZE * GRID_SIZE];
+    populate_surface_map(surface_map, GRID_SIZE, settings);
 
-    Method method;
-    printf("Choose the which kind of path, you want to find:\n");
-    printf("1) Shortest path\n");
-    printf("2) Fastest path\n");
-    printf("3) Safest path\n");
-    printf("> ");
-    scanf("%d", &method);
+    int costs_map[GRID_SIZE * GRID_SIZE];
+    generate_costs_map(costs_map, surface_map, GRID_SIZE, DANGER_ZONE_RADIUS, settings.method, false);
+    print_costs_map(costs_map, GRID_SIZE);
 
-    printf("Do you want to add danger zones? (y/n)\n> ");
-    // Get the surface map
-    Surface * surface_map = generate_surface_map();
+    node_t * start_node = create_node(settings.start_coordinates, NULL, 0, INF);
+    node_t * end_node = create_node(settings.end_coordinates, NULL, 0, 0);
 
-    // Generate the costs map using the surface map and the chosen method
-    int * costs_map = generate_costs_map(surface_map, method, 0);
-    print_costs_map(costs_map);
-    
-    // Create the start and end nodes
-    Node * start = create_node(start_coordinates, NULL, 0, INF);
-    Node * end = create_node(end_coordinates, NULL, 0, 0);
+    node_t * path = find_path(costs_map, GRID_SIZE, start_node, end_node);
+    print_path_result(settings, surface_map, GRID_SIZE, path);
 
-    // Find the path
-    Node * path = find_path(start, end, costs_map);
+    free_path(path);
 
-    // If a path was found, add it to the surface map and print it
-    if (path != NULL)
-    {
-        printf("PATH FOUND FROM (%d, %d) -> (%d, %d)\n",
-               start_coordinates.x, start_coordinates.y, end_coordinates.x, end_coordinates.y);
-
-        add_path_to_surface_map(start, end, path, surface_map);
-        print_surface_map(surface_map);
-    }
-    else
-    {
-        printf("NO PATH FOUND FROM (%d, %d) -> (%d, %d)\n",
-               start_coordinates.x, start_coordinates.y, end_coordinates.x, end_coordinates.y);
-    }
-
-
-    // Free the memory
-    free(surface_map);
-    free(costs_map);
+    exit(EXIT_SUCCESS);
 }

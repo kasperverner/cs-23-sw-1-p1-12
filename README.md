@@ -1,11 +1,10 @@
 # cs-23-sw-1-p1-12
 A* pathfinding program for Group 12 P1
 
-Bug fixed, the program now works with any grid size and route length.
+## How to run
+- Setup configurations using the `CMakelists` file. 
+- Then run the program using the main configuration.
 
-![Map](map.jpg?raw=true "Route map")
-
-##  TODO:
-  - [ ] Read map from file
-  - [ ] Make tests
-
+## How to run tests
+- Setup configurations using the `CMakelists` file.
+- Then run All CTests.
