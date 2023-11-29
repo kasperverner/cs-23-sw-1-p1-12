@@ -12,7 +12,7 @@
  * @param h the heuristic cost to move from the given node to the end point.
  * @return the created map node.
  */
-node_t * create_node(coordinates_t coordinates, node_t * next, long double g, long double h)
+node_t *create_node(coordinates_t coordinates, node_t * next, long double g, long double h)
 {
     node_t * new_node = (node_t *) malloc(sizeof(node_t));
 
@@ -39,7 +39,7 @@ node_t * create_node(coordinates_t coordinates, node_t * next, long double g, lo
  * @param end_node the pointer to the the end node.
  * @return the pointer to the last node in the path if a path is found.
  */
-node_t * find_path(const int * map, int map_length, node_t * start_node, node_t * end_node)
+node_t *find_path(const int * map, int map_length, node_t * start_node, node_t * end_node)
 {
     list_node_t * open_nodes = prepend_node_to_list(start_node, NULL);
     list_node_t * closed_nodes = NULL;
@@ -94,7 +94,7 @@ node_t *recursively_find_path(const int * map, int map_length,
  * @param next the next node in the list.
  * @return
  */
-list_node_t * prepend_node_to_list(node_t *data, list_node_t *next)
+list_node_t *prepend_node_to_list(node_t *data, list_node_t *next)
 {
     list_node_t *list_node = (list_node_t *) malloc(sizeof(list_node_t));
 
@@ -115,7 +115,7 @@ list_node_t * prepend_node_to_list(node_t *data, list_node_t *next)
  * @param list the list to get the first node of.
  * @return the node_t data from the first node of the list.
  */
-node_t * get_first_node_from_list(list_node_t * list)
+node_t *get_first_node_from_list(list_node_t * list)
 {
     if (list == NULL)
     {
@@ -130,7 +130,7 @@ node_t * get_first_node_from_list(list_node_t * list)
  * @param list the list to remove the first node from.
  * @return the list_node_t without the first node.
  */
-list_node_t * remove_first_node_from_list(list_node_t * list)
+list_node_t *remove_first_node_from_list(list_node_t * list)
 {
     if (list == NULL)
     {
@@ -246,7 +246,7 @@ double calculate_heuristic_cost(coordinates_t current_coordinates, coordinates_t
  * @param coordinates the coordinates of the node to find.
  * @return the node if it is found, NULL otherwise.
  */
-node_t * find_node_in_list(list_node_t *list, coordinates_t coordinates)
+node_t *find_node_in_list(list_node_t *list, coordinates_t coordinates)
 {
     while (list != NULL)
     {
@@ -281,7 +281,7 @@ void remove_coordinates_from_list(list_node_t *current_node, list_node_t *previo
  * @param node_to_add the node_to_add to add.
  * @return the list of nodes with the new node_to_add added.
  */
-list_node_t * add_node_to_list_ordered_by_f(list_node_t *current_node, list_node_t *previous_node, node_t * node_to_add)
+list_node_t *add_node_to_list_ordered_by_f(list_node_t *current_node, list_node_t *previous_node, node_t * node_to_add)
 {
     // If the current node is NULL or the node_to_add has a lower f score than the current node, add the node_to_add before the current node
     if (current_node == NULL || node_to_add->f < current_node->data->f)

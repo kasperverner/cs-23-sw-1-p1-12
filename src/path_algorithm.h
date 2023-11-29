@@ -23,7 +23,7 @@ list_node_t *add_node_neighbours_to_open_nodes(const int *, int, list_node_t *, 
 double calculate_heuristic_cost(coordinates_t, coordinates_t);
 node_t *find_node_in_list(list_node_t *, coordinates_t);
 void remove_coordinates_from_list(list_node_t *, list_node_t *, coordinates_t);
-list_node_t * add_node_to_list_ordered_by_f(list_node_t *, list_node_t *, node_t *);
+list_node_t *add_node_to_list_ordered_by_f(list_node_t *, list_node_t *, node_t *);
 void free_list(list_node_t *);
 void free_path(node_t *);
 
