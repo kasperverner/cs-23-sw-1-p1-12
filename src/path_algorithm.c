@@ -32,7 +32,7 @@ node_t * create_node(coordinates_t coordinates, node_t * next, long double g, lo
 }
 
 /**
- *
+ * Find the path from the start node to the end node.
  * @param map the pointer to the first element of the costs map.
  * @param map_length the length of the costs map.
  * @param start_node the pointer to the the start node.
@@ -44,7 +44,7 @@ node_t * find_path(const int * map, int map_length, node_t * start_node, node_t 
     list_node_t * open_nodes = prepend_node_to_list(start_node, NULL);
     list_node_t * closed_nodes = NULL;
 
-    node_t * path = find_path_helper(map, map_length, open_nodes, closed_nodes, end_node);
+    node_t * path = recursively_find_path(map, map_length, open_nodes, closed_nodes, end_node);
 
     // Free the lists first to avoid memory leaks
     free_list(open_nodes);
@@ -62,7 +62,7 @@ node_t * find_path(const int * map, int map_length, node_t * start_node, node_t 
  * @param end_node the pointer to the end node.
  * @return the pointer to the last node in the path if a path is found.
  */
-node_t *find_path_helper(const int * map, int map_length,
+node_t *recursively_find_path(const int * map, int map_length,
                          list_node_t *open_nodes, list_node_t *closed_nodes,
                          node_t * end_node)
 {
@@ -85,7 +85,7 @@ node_t *find_path_helper(const int * map, int map_length,
     // Add the neighbours of the current node to the open nodes
     open_nodes = add_node_neighbours_to_open_nodes(map, map_length, open_nodes, closed_nodes, current_node, end_node);
 
-    return find_path_helper(map, map_length, open_nodes, closed_nodes, end_node);
+    return recursively_find_path(map, map_length, open_nodes, closed_nodes, end_node);
 }
 
 /**
