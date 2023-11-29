@@ -9,6 +9,15 @@ int main(void)
 {
     settings_t settings = scan_settings(GRID_SIZE);
 
+    //DEBUG SETTINGS - REMOVE BEFORE FINAL COMMIT
+    /*
+    settings_t settings = {
+        .start_coordinates = {1, 1},
+        .end_coordinates = {38, 38},
+        .method = SAFEST
+    };
+    */
+
     surface_e surface_map[GRID_SIZE * GRID_SIZE];
     populate_surface_map(surface_map, GRID_SIZE, settings);
 

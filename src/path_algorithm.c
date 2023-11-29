@@ -191,13 +191,13 @@ list_node_t *add_node_neighbours_to_open_nodes(const int * map, int map_length,
 
             // If the neighbour is a diagonal, account for the diagonal distance being longer than the horizontal or vertical distance
             // The diagonal distance is calculated using the pythagorean theorem.
-            if (x != 0 && y != 0)
-                cost *= PYTHAGOREAN_THEOREM;
+            //if (x != 0 && y != 0)
+                //cost *= PYTHAGOREAN_THEOREM;
 
             double heuristic_cost = calculate_heuristic_cost(coordinates, end_node->coordinates);
 
-            // Assign neighbour node
-            node_t * neighbour_node = create_node(
+            // Allocated the new neighbour node
+            node_t * new_node = create_node(
                     coordinates,
                     current_node,
                     current_node->g + cost,
@@ -212,15 +212,15 @@ list_node_t *add_node_neighbours_to_open_nodes(const int * map, int map_length,
             node_t * open_node_with_same_coordinates = find_node_in_list(open_nodes, coordinates);
 
             // If the coordinate is already open with lower or same f score, do not add it to the open nodes
-            if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f <= neighbour_node->f)
+            if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f <= new_node->f)
                 continue;
 
             // If the coordinate is already open with higher f score, remove coordinates from the open nodes
-            if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f > neighbour_node->f)
+            if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f > new_node->f)
                 remove_coordinates_from_list(open_nodes, NULL, coordinates);
 
             // Add the neighbour node to the open nodes
-            open_nodes = add_node_to_list_ordered_by_f(open_nodes, NULL, neighbour_node);
+            open_nodes = add_node_to_list_ordered_by_f(open_nodes, open_nodes, NULL, new_node);
         }
     }
 
@@ -267,62 +267,64 @@ node_t *find_node_in_list(list_node_t *list, coordinates_t coordinates)
  */
 void remove_coordinates_from_list(list_node_t *current_node, list_node_t *previous_node, coordinates_t coordinates)
 {
+    if (current_node == NULL)
+        return;
+
     if (coordinate_is_match(current_node->data->coordinates, coordinates))
     {
-        previous_node->next = current_node->next;
+        list_node_t *next_node = current_node->next;
         free(current_node);
+
+        // If the current node is the first node, set previous node to the next node
+        if (previous_node == NULL)
+            previous_node = next_node;
+        else
+            previous_node->next = next_node;
+
+        return;
     }
+
+    remove_coordinates_from_list(current_node->next, current_node, coordinates);
 }
 
 /**
  * Recursively add node_to_add to a list of nodes sorted by f score from lowest to highest.
+ * @param first_node the first node in the list.
  * @param current_node the current node_to_add.
  * @param previous_node the previous node_to_add.
  * @param node_to_add the node_to_add to add.
  * @return the list of nodes with the new node_to_add added.
  */
-list_node_t *add_node_to_list_ordered_by_f(list_node_t *current_node, list_node_t *previous_node, node_t * node_to_add)
+list_node_t *add_node_to_list_ordered_by_f(list_node_t *first_node, list_node_t *current_node, list_node_t *previous_node, node_t * node_to_add)
 {
-    // If the current node is NULL or the node_to_add has a lower f score than the current node, add the node_to_add before the current node
-    if (current_node == NULL || node_to_add->f < current_node->data->f)
+    // If the list is empty, add the node_to_add to the list
+    if (first_node == NULL)
+        return prepend_node_to_list(node_to_add, NULL);
+
+    // If the current node is NULL, add the node_to_add to the end of the list
+    if (current_node == NULL)
     {
-        list_node_t *new_node = (list_node_t *) malloc(sizeof(list_node_t));
+        list_node_t *new_node = prepend_node_to_list(node_to_add, NULL);
+        previous_node->next = new_node;
+        return first_node;
+    }
 
-        if (new_node == NULL)
-        {
-            printf("Error: failed to allocated new_node\n");
-            exit(EXIT_FAILURE);
-        }
+    // If the node_to_add has a lower f score than the current node, add the node_to_add before the current node
+    if (node_to_add->f < current_node->data->f)
+    {
+        list_node_t *new_node = prepend_node_to_list(node_to_add, current_node);
 
-        new_node->data = node_to_add;
-        new_node->next = current_node;
-
-        // If the previous node is not NULL, set the previous node's next pointer to the new node
-        if (previous_node != NULL)
+        // If the current node is the first node, set the first node to the new node
+        if (previous_node == NULL)
+            first_node = new_node;
+        else
             previous_node->next = new_node;
 
-        return new_node;
+        return first_node;
     }
 
-    // If the current node is the last node, add the node_to_add after the current node
-    if (current_node->next == NULL)
-    {
-        list_node_t *new_node = (list_node_t *) malloc(sizeof(list_node_t));
-
-        if (new_node == NULL)
-        {
-            printf("Error: failed to allocated new_node\n");
-            exit(EXIT_FAILURE);
-        }
-
-        new_node->data = node_to_add;
-        new_node->next = NULL;
-        current_node->next = new_node;
-        return new_node;
-    }
-
-    // Recursively add the node_to_add to the list until the node_to_add has a lower f score than the current node
-    return add_node_to_list_ordered_by_f(current_node->next, current_node, node_to_add);
+    // If the node_to_add has a higher f score than the current node, recursively add the node_to_add to the next node
+    return add_node_to_list_ordered_by_f(first_node, current_node->next, current_node, node_to_add);
 }
 
 /**
