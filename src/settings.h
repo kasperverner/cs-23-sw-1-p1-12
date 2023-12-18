@@ -2,46 +2,43 @@
 #define SETTINGS_H
 
 #define INF 999999
-#define GRID_SIZE 40
-#define DANGER_ZONE_RADIUS 4
+#define DANGER_ZONE_RADIUS 3
 
-enum route_method_e
+typedef enum
 {
     SHORTEST = 1,
     FASTEST = 2,
     SAFEST = 3
-};
-typedef enum route_method_e route_method_e;
+} route_method_e;
 
-enum surface_e
+typedef enum
 {
+    UNKNOWN = -1,
     ROAD = 1,
-    GRASS = 5,
-    CITY = 10,
-    FORREST = 15,
-    WATER = 100,
-    START = 101,
-    END = 102,
-    PATH = 103,
-    OBSTRUCTION = 10000,
-    LANDMINE = INF
-};
-typedef enum surface_e surface_e;
+    DIRT = 11,
+    LIGHT_BRUSH = 12,
+    FOREST = 25,
+    CITY = 26,
+    SAND = 41,
+    WATER = INF-1,
+    LANDMINE = INF,
+    START = 1111,
+    END = 2222,
+    PATH = 3333
+} surface_e;
 
-struct coordinates_t
+typedef struct coordinates_t
 {
     int x;
     int y;
-};
-typedef struct coordinates_t coordinates_t;
+} coordinates_t;
 
-struct settings_t
+typedef struct settings_t
 {
     coordinates_t start_coordinates;
     coordinates_t end_coordinates;
     route_method_e method;
-};
-typedef struct settings_t settings_t;
+} settings_t;
 
 /**
  * node used for the A* search algorithm.
@@ -57,19 +54,18 @@ typedef struct settings_t settings_t;
  * next:        The previous node in the path.
  *              This is used to trace the path back to the starting point once the end point has been reached.
  */
-struct node_t
+typedef struct node_t
 {
     coordinates_t coordinates;
     long double g;
     long double h;
     long double f;
     struct node_t *next;
-};
-typedef struct node_t node_t;
+} node_t;
 
-settings_t scan_settings(int);
-coordinates_t get_start_coordinates(int);
-coordinates_t get_end_coordinates(int, coordinates_t);
+settings_t scan_settings(surface_e *, int);
+coordinates_t get_start_coordinates(surface_e *, int);
+coordinates_t get_end_coordinates(surface_e *, int, coordinates_t);
 route_method_e get_method(void);
 
 #endif

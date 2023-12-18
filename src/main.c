@@ -7,31 +7,27 @@
 
 int main(void)
 {
-    settings_t settings = scan_settings(GRID_SIZE);
+    int grid_size = get_grid_size_from_file();
 
-    //DEBUG SETTINGS - REMOVE BEFORE FINAL COMMIT
-    /*
-    settings_t settings = {
-        .start_coordinates = {1, 1},
-        .end_coordinates = {38, 38},
-        .method = SAFEST
-    };
-    */
+    surface_e surface_map[grid_size * grid_size];
+    get_grid_from_file(surface_map, grid_size);
 
-    surface_e surface_map[GRID_SIZE * GRID_SIZE];
-    populate_surface_map(surface_map, GRID_SIZE, settings);
+    print_surface_map(surface_map, grid_size);
+    print_explanation();
 
-    int costs_map[GRID_SIZE * GRID_SIZE];
-    generate_costs_map(costs_map, surface_map, GRID_SIZE, DANGER_ZONE_RADIUS, settings.method, false);
-    print_costs_map(costs_map, GRID_SIZE);
+    settings_t settings = scan_settings(surface_map, grid_size);
+
+    int costs_map[grid_size * grid_size];
+    generate_costs_map(costs_map, surface_map, grid_size, DANGER_ZONE_RADIUS, settings.method, false);
+    print_costs_map(costs_map, grid_size);
 
     node_t * start_node = create_node(settings.start_coordinates, NULL, 0, INF);
     node_t * end_node = create_node(settings.end_coordinates, NULL, 0, 0);
 
-    node_t * path = find_path(costs_map, GRID_SIZE, start_node, end_node);
-    print_path_result(settings, surface_map, GRID_SIZE, path);
+    node_t * path = find_path(costs_map, grid_size, start_node, end_node);
+    print_path_result(settings, surface_map, grid_size, path);
 
-    free_path(path);
+    recursively_free_path(path);
 
     exit(EXIT_SUCCESS);
 }

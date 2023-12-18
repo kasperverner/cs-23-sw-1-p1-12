@@ -5,7 +5,7 @@
 #include "path_algorithm.h"
 
 /**
- *
+ * ALocates memory for a new node and initializes it.
  * @param coordinates the coordinates of the node.
  * @param parent the parent node.
  * @param g the cost it takes to move from the starting point to the given node.
@@ -14,7 +14,7 @@
  */
 node_t *create_node(coordinates_t coordinates, node_t * next, long double g, long double h)
 {
-    node_t * new_node = (node_t *) malloc(sizeof(node_t));
+    node_t *new_node = (node_t *) malloc(sizeof(node_t));
 
     if (new_node == NULL)
     {
@@ -41,14 +41,14 @@ node_t *create_node(coordinates_t coordinates, node_t * next, long double g, lon
  */
 node_t *find_path(const int * map, int map_length, node_t * start_node, node_t * end_node)
 {
-    list_node_t * open_nodes = prepend_node_to_list(start_node, NULL);
-    list_node_t * closed_nodes = NULL;
+    list_node_t *open_nodes = prepend_node_to_list(start_node, NULL);
+    list_node_t *closed_nodes = NULL;
 
-    node_t * path = recursively_find_path(map, map_length, open_nodes, closed_nodes, end_node);
+    node_t *path = recursively_find_path(map, map_length, open_nodes, closed_nodes, end_node);
 
     // Free the lists first to avoid memory leaks
-    free_list(open_nodes);
-    free_list(closed_nodes);
+    recursively_free_list(open_nodes);
+    recursively_free_list(closed_nodes);
 
     return path;
 }
@@ -72,7 +72,7 @@ node_t *recursively_find_path(const int * map, int map_length,
 
     // The open nodes are sorted by f score from lowest to highest
     // The first node in the list will always have the lowest f score
-    node_t * current_node = get_first_node_from_list(open_nodes);
+    node_t *current_node = get_first_node_from_list(open_nodes);
 
     // Return the path if the current node is the end_node node
     if (coordinate_is_match(current_node->coordinates, end_node->coordinates))
@@ -200,25 +200,25 @@ list_node_t *add_node_neighbours_to_open_nodes(const int * map, int map_length,
 
             // If the neighbour is a diagonal, account for the diagonal distance being longer than the horizontal or vertical distance
             // The diagonal distance is calculated using the pythagorean theorem.
-            //if (x != 0 && y != 0)
-                //cost *= PYTHAGOREAN_THEOREM;
+            if (x != 0 && y != 0)
+                cost *= PYTHAGOREAN_THEOREM;
 
             double heuristic_cost = calculate_heuristic_cost(coordinates, end_node->coordinates);
 
             // Allocated the new neighbour node
-            node_t * new_node = create_node(
+            node_t *new_node = create_node(
                     coordinates,
                     current_node,
                     current_node->g + cost,
                     heuristic_cost);
 
-            node_t * closed_node_with_same_coordinates = find_node_in_list(closed_nodes, coordinates);
+            node_t *closed_node_with_same_coordinates = find_node_in_list(closed_nodes, coordinates);
 
             // If the coordinate has been closed, skip it as it will never be the best path
             if (closed_node_with_same_coordinates != NULL)
                 continue;
 
-            node_t * open_node_with_same_coordinates = find_node_in_list(open_nodes, coordinates);
+            node_t *open_node_with_same_coordinates = find_node_in_list(open_nodes, coordinates);
 
             // If the coordinate is already open with lower or same f score, do not add it to the open nodes
             if (open_node_with_same_coordinates != NULL && open_node_with_same_coordinates->f <= new_node->f)
@@ -300,7 +300,7 @@ double calculate_heuristic_cost(coordinates_t current_coordinates, coordinates_t
  * Recursively free a list of nodes.
  * @param list the list of nodes to free.
  */
-void free_list(list_node_t *list)
+void recursively_free_list(list_node_t *list)
 {
     if (list == NULL)
         return;
@@ -309,14 +309,14 @@ void free_list(list_node_t *list)
 
     free(list);
 
-    free_list(next);
+    recursively_free_list(next);
 }
 
 /**
  * Recursively free a path of nodes.
  * @param path the path of nodes to free.
  */
-void free_path(node_t * path)
+void recursively_free_path(node_t * path)
 {
     if (path == NULL)
         return;
@@ -325,5 +325,5 @@ void free_path(node_t * path)
 
     free(path);
 
-    free_path(next);
+    recursively_free_path(next);
 }
