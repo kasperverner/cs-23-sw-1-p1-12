@@ -1,4 +1,4 @@
-#include <math.h>
+#include <stdlib.h>
 #include "cost_map.h"
 
 /**
@@ -44,8 +44,6 @@ void generate_costs_map(int * costs_map, const surface_e * surface_map, int map_
  */
 void add_danger_zones(int * costs_map, int map_length, int danger_zone_radius)
 {
-    // TODO: Refactor this and extract the cost calculation to a function
-
     for (int i = 0; i < map_length * map_length; i++)
     {
         if (costs_map[i] == LANDMINE)
@@ -66,9 +64,25 @@ void add_danger_zones(int * costs_map, int map_length, int danger_zone_radius)
 
                     // If the node is not a landmine, increase the costs by the danger zone radius - distance from the mine times 10
                     if (costs_map[index] != LANDMINE)
-                        costs_map[index] += ((danger_zone_radius-fabs(j)+1) * (danger_zone_radius-fabs(k)+1) * 10);
+                        costs_map[index] += calculate_danger_zone_cost(danger_zone_radius, j, k, 10);
                 }
             }
         }
     }
+}
+
+/**
+ * Calculates the cost of a danger zone.
+ * @param danger_zone_radius
+ * @param horizontal_distance_to_mine
+ * @param vertical_distance_to_mine
+ * @param amplifier
+ * @return the cost to add to the node based on the distance to the mine.
+ */
+int calculate_danger_zone_cost(int danger_zone_radius, int horizontal_distance_to_mine, int vertical_distance_to_mine, int amplifier)
+{
+    int horizontal_cost = (danger_zone_radius - abs(horizontal_distance_to_mine) + 1);
+    int vertical_cost = (danger_zone_radius - abs(vertical_distance_to_mine) + 1);
+
+    return horizontal_cost * vertical_cost * amplifier;
 }

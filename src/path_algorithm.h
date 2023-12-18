@@ -23,7 +23,7 @@ list_node_t *add_node_neighbours_to_open_nodes(const int *, int, list_node_t *, 
 list_node_t *add_node_to_list_ordered_by_f(list_node_t *, list_node_t *, list_node_t *, node_t *);
 bool coordinate_is_match(coordinates_t, coordinates_t);
 double calculate_heuristic_cost(coordinates_t, coordinates_t);
-void free_list(list_node_t *);
-void free_path(node_t *);
+void recursively_free_list(list_node_t *);
+void recursively_free_path(node_t *);
 
 #endif

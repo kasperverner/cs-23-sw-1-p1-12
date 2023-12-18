@@ -42,18 +42,28 @@ void print_surface_node(surface_e node)
         case ROAD:
             print_square(TRANSPARENT);
             break;
-        case GRASS:
+        case DIRT:
             printf(ANSI_COLOR_GREEN);
+            print_square(TRANSPARENT);
+            printf(ANSI_COLOR_RESET);
+            break;
+        case LIGHT_BRUSH:
+            printf(ANSI_COLOR_YELLOW);
             print_square(OPAQUE);
+            printf(ANSI_COLOR_RESET);
+            break;
+        case FOREST:
+            printf(ANSI_COLOR_GREEN);
+            print_square(SOLID);
+            printf(ANSI_COLOR_RESET);
+            break;
+        case SAND:
+            printf(ANSI_COLOR_YELLOW);
+            print_square(SOLID);
             printf(ANSI_COLOR_RESET);
             break;
         case CITY:
             printf(ANSI_COLOR_MAGENTA);
-            print_square(OPAQUE);
-            printf(ANSI_COLOR_RESET);
-            break;
-        case FORREST:
-            printf(ANSI_COLOR_YELLOW);
             print_square(OPAQUE);
             printf(ANSI_COLOR_RESET);
             break;
@@ -107,6 +117,30 @@ void print_square(fill_mode_e mode)
 void print_explanation(void)
 {
     printf("\n");
+    print_surface_node(ROAD);
+    printf(" -> ROAD");
+    printf("\n");
+    print_surface_node(DIRT);
+    printf(" -> PLAINS");
+    printf("\n");
+    print_surface_node(LIGHT_BRUSH);
+    printf(" -> ACREAGE");
+    printf("\n");
+    print_surface_node(FOREST);
+    printf(" -> FOREST");
+    printf("\n");
+    print_surface_node(SAND);
+    printf(" -> SAND");
+    printf("\n");
+    print_surface_node(CITY);
+    printf(" -> CITY");
+    printf("\n");
+    print_surface_node(WATER);
+    printf(" -> WATER");
+    printf("\n");
+    print_surface_node(LANDMINE);
+    printf(" -> LANDMINE");
+    printf("\n");
     print_surface_node(START);
     printf(" -> START");
     printf("\n");
@@ -115,24 +149,6 @@ void print_explanation(void)
     printf("\n");
     print_surface_node(PATH);
     printf(" -> PATH");
-    printf("\n");
-    print_surface_node(ROAD);
-    printf(" -> ROAD");
-    printf("\n");
-    print_surface_node(GRASS);
-    printf(" -> GRASS");
-    printf("\n");
-    print_surface_node(CITY);
-    printf(" -> CITY");
-    printf("\n");
-    print_surface_node(FORREST);
-    printf(" -> FORREST");
-    printf("\n");
-    print_surface_node(WATER);
-    printf(" -> WATER");
-    printf("\n");
-    print_surface_node(LANDMINE);
-    printf(" -> LANDMINE");
     printf("\n");
 }
 
@@ -153,7 +169,6 @@ void print_path_result(settings_t settings, surface_e *map, int map_length, node
 
         add_path_to_surface_map(map, map_length, settings, path);
         print_surface_map(map, map_length);
-        print_explanation();
     }
     else
     {
