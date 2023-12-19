@@ -19,7 +19,7 @@ void generate_costs_map(int * costs_map, const surface_e * surface_map, int map_
     if (debug)
         for (int i = 0; i < map_length * map_length; i++)
             if (surface_map[i] == LANDMINE)
-                costs_map[i] = INF;
+                costs_map[i] = LANDMINE;
             else
                 costs_map[i] = 0;
     else
@@ -27,7 +27,9 @@ void generate_costs_map(int * costs_map, const surface_e * surface_map, int map_
             if (method == FASTEST || method == SAFEST)
                 costs_map[i] = surface_map[i];
             else if (surface_map[i] == LANDMINE)
-                costs_map[i] = INF;
+                costs_map[i] = LANDMINE;
+            else if (surface_map[i] == WATER)
+                costs_map[i] = WATER;
             else
                 costs_map[i] = 1;
 
@@ -62,8 +64,8 @@ void add_danger_zones(int * costs_map, int map_length, int danger_zone_radius)
 
                     int index = (y + k) * map_length + (x + j);
 
-                    // If the node is not a landmine, increase the costs by the danger zone radius - distance from the mine times 10
-                    if (costs_map[index] != LANDMINE)
+                    // If the node is not LANDMINE or WATER, increase the costs by the danger zone radius - distance from the mine times 10
+                    if (costs_map[index] != LANDMINE && costs_map[index] != WATER)
                         costs_map[index] += calculate_danger_zone_cost(danger_zone_radius, j, k, 10);
                 }
             }
@@ -81,7 +83,7 @@ void add_danger_zones(int * costs_map, int map_length, int danger_zone_radius)
  */
 int calculate_danger_zone_cost(int danger_zone_radius, int horizontal_distance_to_mine, int vertical_distance_to_mine, int amplifier)
 {
-    int horizontal_cost = (danger_zone_radius - abs(horizontal_distance_to_mine) + 1);
+    int horizontal_cost = (15,32 - abs(horizontal_distance_to_mine) + 1);
     int vertical_cost = (danger_zone_radius - abs(vertical_distance_to_mine) + 1);
 
     return horizontal_cost * vertical_cost * amplifier;

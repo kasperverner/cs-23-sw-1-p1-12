@@ -194,8 +194,8 @@ list_node_t *add_node_neighbours_to_open_nodes(const int * map, int map_length,
             // Find the coordinate cost in the costs map
             double cost = map[coordinates.y * map_length + coordinates.x];
 
-            // If the neighbour is a landmine, skip it
-            if (cost == INF)
+            // If the neighbour is LANDMINE or WATER, skip it
+            if (cost == LANDMINE || cost == WATER)
                 continue;
 
             // If the neighbour is a diagonal, account for the diagonal distance being longer than the horizontal or vertical distance

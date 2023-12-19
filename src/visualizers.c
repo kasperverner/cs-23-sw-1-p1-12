@@ -202,10 +202,15 @@ void print_costs_map(const int * map, int map_length)
 
         for(int j = 0; j < map_length; j++)
         {
-            if (map[i * map_length + j] == INF)
+            if (map[i * map_length + j] == LANDMINE)
             {
                 printf(ANSI_COLOR_RED);
-                //printf(" \u2622  ");
+                printf("%.3d ", map[i * map_length + j] % 1000);
+                printf(ANSI_COLOR_RESET);
+            }
+            else if (map[i * map_length + j] == WATER)
+            {
+                printf(ANSI_COLOR_BLUE);
                 printf("%.3d ", map[i * map_length + j] % 1000);
                 printf(ANSI_COLOR_RESET);
             }
