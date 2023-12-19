@@ -27,6 +27,7 @@ int get_grid_size_from_file(void)
 
         c = fgetc(file);
     }
+
     fclose(file);
     return lines;
 }
