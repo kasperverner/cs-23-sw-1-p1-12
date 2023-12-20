@@ -19,7 +19,6 @@ int main(void)
 
     int costs_map[grid_size * grid_size];
     generate_costs_map(costs_map, surface_map, grid_size, DANGER_ZONE_RADIUS, settings.method, false);
-    //print_costs_map(costs_map, grid_size);
 
     node_t * start_node = create_node(settings.start_coordinates, NULL, 0, INF);
     node_t * end_node = create_node(settings.end_coordinates, NULL, 0, 0);
