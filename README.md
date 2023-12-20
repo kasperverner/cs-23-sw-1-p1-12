@@ -25,7 +25,7 @@ These findings lead us to the problem statement:
 - [Oskar Sun](mailto:osun23@student.aau.dk)
 
 ## A* pathfinding program for cs-23-sw-1-p1-12
-![Map](map.jpg?raw=true "Route map")
+![Map](map.png?raw=true "Route map")
 
 ## How to run
 - Setup configurations using the `CMakelists` file. 
