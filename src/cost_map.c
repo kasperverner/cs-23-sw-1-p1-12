@@ -83,7 +83,7 @@ void add_danger_zones(int * costs_map, int map_length, int danger_zone_radius)
  */
 int calculate_danger_zone_cost(int danger_zone_radius, int horizontal_distance_to_mine, int vertical_distance_to_mine, int amplifier)
 {
-    int horizontal_cost = (15,32 - abs(horizontal_distance_to_mine) + 1);
+    int horizontal_cost = (danger_zone_radius - abs(horizontal_distance_to_mine) + 1);
     int vertical_cost = (danger_zone_radius - abs(vertical_distance_to_mine) + 1);
 
     return horizontal_cost * vertical_cost * amplifier;
